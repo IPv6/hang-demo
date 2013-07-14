@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3AB113D51792AE2E0047A50E /* AudioCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB113CD1792AE2E0047A50E /* AudioCapture.m */; };
+		3AB113D61792AE2E0047A50E /* WavCreator.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB113CF1792AE2E0047A50E /* WavCreator.m */; };
+		3AB113D71792AE2E0047A50E /* RecordToMemory.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB113D11792AE2E0047A50E /* RecordToMemory.m */; };
+		3AB113D81792AE2E0047A50E /* NSString+Filename.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AB113D41792AE2E0047A50E /* NSString+Filename.m */; };
 		3AC07FAA1780C761009D5596 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FA91780C761009D5596 /* UIKit.framework */; };
 		3AC07FAC1780C761009D5596 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FAB1780C761009D5596 /* Foundation.framework */; };
 		3AC07FAE1780C761009D5596 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FAD1780C761009D5596 /* CoreGraphics.framework */; };
@@ -18,9 +22,22 @@
 		3AC07FC01780C761009D5596 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3AC07FBF1780C761009D5596 /* Default-568h@2x.png */; };
 		3AC07FC31780C761009D5596 /* HANGViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC07FC21780C761009D5596 /* HANGViewController.m */; };
 		3AC07FC61780C761009D5596 /* HANGViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3AC07FC41780C761009D5596 /* HANGViewController.xib */; };
+		3AC07FCD1780C78B009D5596 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FCC1780C78B009D5596 /* Accelerate.framework */; };
+		3AC07FCF1780C794009D5596 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FCE1780C794009D5596 /* AVFoundation.framework */; };
+		3AC07FD11780C79B009D5596 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3AC07FD01780C79B009D5596 /* CoreMedia.framework */; };
+		3AC07FD41780CA5B009D5596 /* HANGLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 3AC07FD31780CA5B009D5596 /* HANGLib.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3AB113CC1792AE2E0047A50E /* AudioCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioCapture.h; sourceTree = "<group>"; };
+		3AB113CD1792AE2E0047A50E /* AudioCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioCapture.m; sourceTree = "<group>"; };
+		3AB113CE1792AE2E0047A50E /* WavCreator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WavCreator.h; sourceTree = "<group>"; };
+		3AB113CF1792AE2E0047A50E /* WavCreator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WavCreator.m; sourceTree = "<group>"; };
+		3AB113D01792AE2E0047A50E /* RecordToMemory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RecordToMemory.h; sourceTree = "<group>"; };
+		3AB113D11792AE2E0047A50E /* RecordToMemory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RecordToMemory.m; sourceTree = "<group>"; };
+		3AB113D21792AE2E0047A50E /* SoundProcessorProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SoundProcessorProtocol.h; sourceTree = "<group>"; };
+		3AB113D31792AE2E0047A50E /* NSString+Filename.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Filename.h"; sourceTree = "<group>"; };
+		3AB113D41792AE2E0047A50E /* NSString+Filename.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Filename.m"; sourceTree = "<group>"; };
 		3AC07FA61780C761009D5596 /* Hang demo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hang demo.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AC07FA91780C761009D5596 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3AC07FAB1780C761009D5596 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -37,6 +54,11 @@
 		3AC07FC11780C761009D5596 /* HANGViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HANGViewController.h; sourceTree = "<group>"; };
 		3AC07FC21780C761009D5596 /* HANGViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HANGViewController.m; sourceTree = "<group>"; };
 		3AC07FC51780C761009D5596 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/HANGViewController.xib; sourceTree = "<group>"; };
+		3AC07FCC1780C78B009D5596 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		3AC07FCE1780C794009D5596 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		3AC07FD01780C79B009D5596 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		3AC07FD21780CA5B009D5596 /* HANGLib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HANGLib.h; sourceTree = "<group>"; };
+		3AC07FD31780CA5B009D5596 /* HANGLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HANGLib.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +66,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3AC07FD11780C79B009D5596 /* CoreMedia.framework in Frameworks */,
+				3AC07FCF1780C794009D5596 /* AVFoundation.framework in Frameworks */,
+				3AC07FCD1780C78B009D5596 /* Accelerate.framework in Frameworks */,
 				3AC07FAA1780C761009D5596 /* UIKit.framework in Frameworks */,
 				3AC07FAC1780C761009D5596 /* Foundation.framework in Frameworks */,
 				3AC07FAE1780C761009D5596 /* CoreGraphics.framework in Frameworks */,
@@ -53,6 +78,29 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3AB113DA1792AE3E0047A50E /* AVFoundationRecord */ = {
+			isa = PBXGroup;
+			children = (
+				3AB113CC1792AE2E0047A50E /* AudioCapture.h */,
+				3AB113CD1792AE2E0047A50E /* AudioCapture.m */,
+				3AB113CE1792AE2E0047A50E /* WavCreator.h */,
+				3AB113CF1792AE2E0047A50E /* WavCreator.m */,
+				3AB113D01792AE2E0047A50E /* RecordToMemory.h */,
+				3AB113D11792AE2E0047A50E /* RecordToMemory.m */,
+				3AB113D21792AE2E0047A50E /* SoundProcessorProtocol.h */,
+				3AB113D31792AE2E0047A50E /* NSString+Filename.h */,
+				3AB113D41792AE2E0047A50E /* NSString+Filename.m */,
+			);
+			name = AVFoundationRecord;
+			sourceTree = "<group>";
+		};
+		3AB113DB1792AE520047A50E /* AudioUnitRecord */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = AudioUnitRecord;
+			sourceTree = "<group>";
+		};
 		3AC07F9D1780C761009D5596 = {
 			isa = PBXGroup;
 			children = (
@@ -73,6 +121,9 @@
 		3AC07FA81780C761009D5596 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3AC07FD01780C79B009D5596 /* CoreMedia.framework */,
+				3AC07FCE1780C794009D5596 /* AVFoundation.framework */,
+				3AC07FCC1780C78B009D5596 /* Accelerate.framework */,
 				3AC07FA91780C761009D5596 /* UIKit.framework */,
 				3AC07FAB1780C761009D5596 /* Foundation.framework */,
 				3AC07FAD1780C761009D5596 /* CoreGraphics.framework */,
@@ -83,12 +134,16 @@
 		3AC07FAF1780C761009D5596 /* Hang demo */ = {
 			isa = PBXGroup;
 			children = (
+				3AB113DB1792AE520047A50E /* AudioUnitRecord */,
+				3AB113DA1792AE3E0047A50E /* AVFoundationRecord */,
 				3AC07FB81780C761009D5596 /* HANGAppDelegate.h */,
 				3AC07FB91780C761009D5596 /* HANGAppDelegate.m */,
 				3AC07FC11780C761009D5596 /* HANGViewController.h */,
 				3AC07FC21780C761009D5596 /* HANGViewController.m */,
 				3AC07FC41780C761009D5596 /* HANGViewController.xib */,
 				3AC07FB01780C761009D5596 /* Supporting Files */,
+				3AC07FD21780CA5B009D5596 /* HANGLib.h */,
+				3AC07FD31780CA5B009D5596 /* HANGLib.m */,
 			);
 			path = "Hang demo";
 			sourceTree = "<group>";
@@ -177,6 +232,11 @@
 				3AC07FB61780C761009D5596 /* main.m in Sources */,
 				3AC07FBA1780C761009D5596 /* HANGAppDelegate.m in Sources */,
 				3AC07FC31780C761009D5596 /* HANGViewController.m in Sources */,
+				3AC07FD41780CA5B009D5596 /* HANGLib.m in Sources */,
+				3AB113D51792AE2E0047A50E /* AudioCapture.m in Sources */,
+				3AB113D61792AE2E0047A50E /* WavCreator.m in Sources */,
+				3AB113D71792AE2E0047A50E /* RecordToMemory.m in Sources */,
+				3AB113D81792AE2E0047A50E /* NSString+Filename.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,6 +324,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Hang demo/Hang demo-Prefix.pch";
 				INFOPLIST_FILE = "Hang demo/Hang demo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -275,6 +336,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Hang demo/Hang demo-Prefix.pch";
 				INFOPLIST_FILE = "Hang demo/Hang demo-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.1;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
 			};
@@ -299,6 +361,7 @@
 				3AC07FCB1780C761009D5596 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
