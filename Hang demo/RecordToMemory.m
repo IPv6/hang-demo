@@ -72,8 +72,7 @@
 - (NSMutableData *) recordedData
 {
     if (!_recordedData) {
-        _recordedData = [[NSMutableData alloc] initWithCapacity:(44100*2*15)]; //16 bit mono 44100Hz 15 sec
-        DLog(@"%zd", [_recordedData length]);
+        _recordedData = [[NSMutableData alloc] init];
     }
     return _recordedData;
     

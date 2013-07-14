@@ -10,5 +10,6 @@
 @interface WavCreator : NSObject
 
 + (NSData *)createWavFromData:(NSData *)audioData;
++ (NSData *)createDataFromWav:(NSData *)wavAudioData;
 
 @end

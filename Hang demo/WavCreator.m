@@ -23,6 +23,11 @@ typedef struct {
     UInt32 subchunk2Size;
 } WaveHeaderStruct;
 
+typedef struct {
+    WaveHeaderStruct header;
+    UInt16 body;
+} WaveFileStruct;
+
 @implementation WavCreator
 
 + (NSData *)createWavFromData:(NSData *)audioData
@@ -51,5 +56,27 @@ typedef struct {
     
     return result;
 }
+
++ (NSData *)createDataFromWav:(NSData *)wavAudioData
+{
+    NSAssert(wavAudioData != NULL, @"Audio data must be not null");
+    WaveFileStruct *wavFile = (WaveFileStruct *)[wavAudioData bytes];
+    WaveHeaderStruct wav = wavFile->header;
+    
+    NSAssert(wav.chunkId == 0x46464952, @"Header error: RIFF not found"); //52494646; //"RIFF"
+    NSAssert(wav.format == 0x45564157, @"Format error: only WAVE supported"); //57415645; //"WAVE"
+    NSAssert(wav.subchunk1ID == 0x20746d66, @"Subchunk ID error: fmt expected"); //666d7420; //"fmt "
+    NSAssert(wav.audioFormat == 1, @"AudioFormat not supported: expected PCM without compression"); //PCM without compression
+    NSAssert(wav.numChannels == 1, @"AudioFormat not supported: expected mono"); //mono
+    NSAssert(wav.sampleRate == 44100, @"Sample rate not supported: expected 44100");
+    NSAssert(wav.bitsPerSample == 16, @"Bits per sample expected 16");
+    
+    NSMutableData *result = [[NSMutableData alloc] initWithCapacity:wav.subchunk2Size];
+    
+    [result appendBytes:&wavFile->body length:wav.subchunk2Size];
+    
+    return result;
+}
+
 
 @end

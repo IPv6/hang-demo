@@ -35,10 +35,12 @@
     int osamp, stepSize, inFifoLatency, gRover;
     float freqPerBin, sampleRate, expct;
     
-//    float magn, phase, tmp, window, real, imag;
-//    float freqPerBin;
-//    int i, k, qpd, index;
+    float magn, phase, tmp, window, real, imag;
+    int i, k, qpd, index;
     
 }
+
+-(void) pitchShiftInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andPitch:(float)pitchShift;
+-(void) autotuneInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length;
 
 @end
