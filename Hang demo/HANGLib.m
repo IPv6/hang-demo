@@ -20,6 +20,7 @@
     if (self) {
         [self setupvDSP];
         [self setupPitchShiftBuffers];
+        [self setupWindowArray];
     }
     return self;
 }
@@ -28,16 +29,38 @@
 {
     [self destroyPitchShiftBuffers];
     [self destroyvDSP];
+    [self destroyWindowArray];
 }
 
 -(void) setupvDSP
 {
     fftSetup = vDSP_create_fftsetup(FFT_ARR_BITS, kFFTRadix2);
+    tempComplex = calloc(sizeof(DSPComplex), FFT_ARR_SIZE_2);
+    tempSplitComplex.realp = calloc(sizeof(float), FFT_ARR_SIZE_2);
+    tempSplitComplex.imagp = calloc(sizeof(float), FFT_ARR_SIZE_2);
 }
+
+-(void) setupWindowArray
+{
+    windowArray = calloc(sizeof(float), fftFrameSize);
+    for (k = 0; k < fftFrameSize; k++)
+    {
+        windowArray[k] = -.5 * cosf(2.0 * M_PI * (float)k / (float)fftFrameSize) + .5;
+    }
+}
+
+-(void) destroyWindowArray
+{
+    free(windowArray);
+}
+
 
 -(void) destroyvDSP
 {
     vDSP_destroy_fftsetup(fftSetup);
+    free(tempComplex);
+    free(tempSplitComplex.realp);
+    free(tempSplitComplex.imagp);
 }
 
 -(void) setupPitchShiftBuffers
@@ -45,6 +68,7 @@
     gInFIFO = calloc(sizeof(float), FFT_ARR_SIZE);
     gOutFIFO = calloc(sizeof(float), FFT_ARR_SIZE);
     gFFTworksp = calloc(sizeof(float), FFT_2_ARR_SIZE);
+    gFFTworksp2 = calloc(sizeof(float), FFT_ARR_SIZE);
     gLastPhase = calloc(sizeof(float), FFT_ARR_SIZE_2_1);
     gSumPhase = calloc(sizeof(float), FFT_ARR_SIZE_2_1);
     gOutputAccum = calloc(sizeof(float), FFT_2_ARR_SIZE);
@@ -73,10 +97,74 @@
     free(gOutputAccum); gOutputAccum = nil;
     free(gSumPhase);    gSumPhase = nil;
     free(gLastPhase);   gLastPhase = nil;
+    free(gFFTworksp2);   gFFTworksp2 = nil;
     free(gFFTworksp);   gFFTworksp = nil;
     free(gOutFIFO);     gOutFIFO = nil;
     free(gInFIFO);      gInFIFO = nil;
 }
+
+-(void) fftTest
+{
+    int length = FFT_ARR_SIZE;
+    
+    float *inDataFloat = malloc(sizeof(float)*length);
+//    float *outDataFloat = malloc(sizeof(float)*length);
+
+    for (int ii = 0; ii < length; ii++) {
+        inDataFloat[ii] = sin(ii*M_PI*2/length*20)*2000 + sin(ii*M_PI*2/length*37)*1500 + sin(ii*M_PI*2/length*51)*1000;
+    }
+    
+//    for (int ii = 0; ii < length; ii++) {
+//        printf("%d %2.2f \n", ii, inDataFloat[ii]);
+//    }
+    
+    
+    for (k = 0; k < fftFrameSize; k++)
+    {
+        gFFTworksp[2 * k] = (float)(inDataFloat[k]/* * windowArray[k]*/);
+        gFFTworksp[2 * k + 1] = 0.0;
+        gFFTworksp2[k] = gFFTworksp[2 * k];
+    }
+    
+    /*
+    for (int ii = 0; ii < length; ii++) {
+        printf("%d %2.6f %2.6f \n", ii, gFFTworksp[ii*2], gFFTworksp[ii*2+1]);
+    }
+     */
+    
+    /* ***************** ANALYSIS ******************* */
+    /* do transform */
+    shortTimeFourierTransform(gFFTworksp, fftFrameSize, -1);
+    
+    vDSP_ctoz((DSPComplex*)gFFTworksp2, 2, &tempSplitComplex, 1, FFT_ARR_SIZE_2);
+    vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, FFT_ARR_BITS, kFFTDirection_Forward);
+    vDSP_ztoc(&tempSplitComplex, 1, (DSPComplex *)gFFTworksp2, 2, FFT_ARR_SIZE_2);
+    
+    for (int ii = 0; ii < length/2; ii++) {
+        printf("%d\t%2.2f\t%2.2f\t-\t%2.2f\t%2.2f\n", ii, gFFTworksp[ii*2], gFFTworksp[ii*2+1], gFFTworksp2[ii*2], gFFTworksp2[ii*2+1]);
+    }
+
+    printf("\n");
+    
+    for (int ii = 0; ii < length; ii++) {
+        gFFTworksp2[ii] = gFFTworksp[ii];
+    }
+    
+    vDSP_ctoz((DSPComplex*)gFFTworksp2, 2, &tempSplitComplex, 1, FFT_ARR_SIZE_2);
+    vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, FFT_ARR_BITS, kFFTDirection_Inverse);
+    vDSP_ztoc(&tempSplitComplex, 1, (DSPComplex *)gFFTworksp2, 2, FFT_ARR_SIZE_2);
+    
+    
+    shortTimeFourierTransform(gFFTworksp, fftFrameSize, 1);
+    for (int ii = 0; ii < length; ii++) {
+        printf("%d\t%2.2f\t%2.2f\t%2.2f\n", ii, gFFTworksp[ii*2]/length, gFFTworksp2[ii]/length, inDataFloat[ii]);
+    }
+    
+
+}
+
+
+
 
 -(void) pitchShiftInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andPitch:(float)pitchShift
 {
@@ -106,25 +194,32 @@
             gRover = inFifoLatency;
             
             /* do windowing and re,im interleave */
+//            float *gFFTworksp2 = malloc(sizeof(float)*FFT_ARR_SIZE); //------------
             for (k = 0; k < fftFrameSize; k++)
             {
-                window = -.5 * cosf(2.0 * M_PI * (float)k / (float)fftFrameSize) + .5;
-                gFFTworksp[2 * k] = (float)(gInFIFO[k] * window);
-                gFFTworksp[2 * k + 1] = 0.0;
+//                gFFTworksp[2 * k] = (float)(gInFIFO[k] * windowArray[k]);
+                gFFTworksp2[k] = (float)(gInFIFO[k] * windowArray[k]);
+//                gFFTworksp[2 * k + 1] = 0.0;
             }
             
             
             /* ***************** ANALYSIS ******************* */
             /* do transform */
-            shortTimeFourierTransform(gFFTworksp, fftFrameSize, -1);
-            
+//            shortTimeFourierTransform(gFFTworksp, fftFrameSize, -1);
+            vDSP_ctoz((DSPComplex*)gFFTworksp2, 2, &tempSplitComplex, 1, FFT_ARR_SIZE_2);
+            vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, FFT_ARR_BITS, kFFTDirection_Forward);
+            vDSP_ztoc(&tempSplitComplex, 1, (DSPComplex *)gFFTworksp2, 2, FFT_ARR_SIZE_2);
+/*
+            for (int ii = 0; ii < FFT_ARR_SIZE; ii++) {
+                printf("%d\t%6.2f\t%6.2f\n", ii, gFFTworksp[ii], gFFTworksp2[ii]/2);
+            }
+*/
             /* this is the analysis step */
             for (k = 0; k <= fftFrameSize2; k++)
             {
-                
                 /* de-interlace FFT buffer */
-                real = gFFTworksp[2 * k];
-                imag = gFFTworksp[2 * k + 1];
+                real = gFFTworksp2[2 * k];
+                imag = gFFTworksp2[2 * k + 1];
                 
                 /* compute magnitude and phase */
                 magn = 2.0 * sqrtf(real * real + imag * imag);
@@ -206,14 +301,30 @@
             /* zero negative frequencies */
             for (k = fftFrameSize + 2; k < 2 * fftFrameSize; k++) gFFTworksp[k] = 0.0;
             
+            for (int ii = 0; ii < FFT_ARR_SIZE; ii++) {
+                gFFTworksp2[ii] = gFFTworksp[ii];
+            }
+
             /* do inverse transform */
-            shortTimeFourierTransform(gFFTworksp, fftFrameSize, 1);
+//            shortTimeFourierTransform(gFFTworksp, fftFrameSize, 1);
+            vDSP_ctoz((DSPComplex*)gFFTworksp2, 2, &tempSplitComplex, 1, FFT_ARR_SIZE_2);
+            vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, FFT_ARR_BITS, kFFTDirection_Inverse);
+            vDSP_ztoc(&tempSplitComplex, 1, (DSPComplex *)gFFTworksp2, 2, FFT_ARR_SIZE_2);
+/*
+            for (int ii = 0; ii < FFT_ARR_SIZE; ii++) {
+                printf("%d\t%6.2f\t%6.2f\n", ii, gFFTworksp[ii * 2], gFFTworksp2[ii]);
+            }
+
+            for (int ii = 0; ii < FFT_ARR_SIZE - 1; ii++) {
+                printf("%d\t%6.2f\t%6.2f\n", ii, gFFTworksp[ii * 2] - gFFTworksp[ii * 2 + 2], gFFTworksp2[ii] - gFFTworksp2[ii + 1]);
+            }
+*/
             
             /* do windowing and add to output accumulator */
             for (k = 0; k < fftFrameSize; k++)
             {
-                window = -.5 * cosf(2.0 * M_PI * (float)k / (float)fftFrameSize) + .5;
-                gOutputAccum[k] += (float)(2.0 * window * gFFTworksp[2 * k] / (fftFrameSize2 * osamp));
+//                gOutputAccum[k] += (float)(2.0 * windowArray[k] * gFFTworksp[2 * k] / (fftFrameSize2 * osamp));
+                gOutputAccum[k] += (float)(2.0 * windowArray[k] * gFFTworksp2[k] / (fftFrameSize2 * osamp));
             }
             for (k = 0; k < stepSize; k++) gOutFIFO[k] = gOutputAccum[k];
             
@@ -240,7 +351,7 @@
 
 -(void) autotuneInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length
 {
-    
+    memcpy(outData, inData, sizeof(SInt16) * length);
 }
 
 

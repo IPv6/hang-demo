@@ -20,10 +20,13 @@
 
 @interface HANGLib : NSObject {
     FFTSetup fftSetup;
+    DSPComplex *tempComplex;
+    DSPSplitComplex tempSplitComplex;
     
     float *gInFIFO;
     float *gOutFIFO;
     float *gFFTworksp;
+    float *gFFTworksp2;
     float *gLastPhase;
     float *gSumPhase;
     float *gOutputAccum;
@@ -38,7 +41,10 @@
     float magn, phase, tmp, window, real, imag;
     int i, k, qpd, index;
     
+    float *windowArray;
 }
+
+-(void) fftTest;
 
 -(void) pitchShiftInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andPitch:(float)pitchShift;
 -(void) autotuneInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length;
