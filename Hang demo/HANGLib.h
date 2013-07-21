@@ -26,7 +26,6 @@
     float *gInFIFO;
     float *gOutFIFO;
     float *gFFTworksp;
-    float *gFFTworksp2;
     float *gLastPhase;
     float *gSumPhase;
     float *gOutputAccum;
@@ -34,7 +33,7 @@
     float *gAnaMagn;
     float *gSynFreq;
     float *gSynMagn;
-    int fftFrameSize, fftFrameSize2;
+    int fftFrameSize, fftFrameSize2, fftFrameSizeLog2;
     int osamp, stepSize, inFifoLatency, gRover;
     float freqPerBin, sampleRate, expct;
     
