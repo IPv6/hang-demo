@@ -64,9 +64,11 @@
 
 - (IBAction)pitchShiftUpButtonPressed:(id)sender
 {
+    NSDate *timeStart = [NSDate date];
     NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
         [self.hangLib pitchShiftInAudiodata:input toOutAudiodata:output withLength:length andPitch:4.0/3.0];
     }];
+    DLog(@"t = %f", [[NSDate date] timeIntervalSinceDate:timeStart]);
     NSData *wavAudioData = [WavCreator createWavFromData:outputData];
     [self playWavAudioData:wavAudioData];
 }
