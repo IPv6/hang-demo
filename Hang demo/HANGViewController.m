@@ -66,7 +66,14 @@
 {
     NSDate *timeStart = [NSDate date];
     NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
-        [self.hangLib pitchShiftInAudiodata:input toOutAudiodata:output withLength:length andPitch:4.0/3.0];
+        PitchShiftsStruct psStruct;
+        psStruct.voices = 1;
+        psStruct.pitchShifts = calloc(sizeof(float), psStruct.voices);
+        [self.hangLib generalTransformInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^PitchShiftsStruct(float inFrequency, float position) {
+            psStruct.pitchShifts[0] = 4.0/3.0;
+            return psStruct;
+        }];
+        free(psStruct.pitchShifts);
     }];
     DLog(@"t = %f", [[NSDate date] timeIntervalSinceDate:timeStart]);
     NSData *wavAudioData = [WavCreator createWavFromData:outputData];
@@ -75,9 +82,18 @@
 
 - (IBAction)pitchShiftDownButtonPressed:(id)sender
 {
+    NSDate *timeStart = [NSDate date];
     NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
-        [self.hangLib pitchShiftInAudiodata:input toOutAudiodata:output withLength:length andPitch:3.0/4.0];
+        PitchShiftsStruct psStruct;
+        psStruct.voices = 1;
+        psStruct.pitchShifts = calloc(sizeof(float), psStruct.voices);
+        [self.hangLib generalTransformInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^PitchShiftsStruct(float inFrequency, float position) {
+            psStruct.pitchShifts[0] = 3.0/4.0;
+            return psStruct;
+        }];
+        free(psStruct.pitchShifts);
     }];
+    DLog(@"t = %f", [[NSDate date] timeIntervalSinceDate:timeStart]);
     NSData *wavAudioData = [WavCreator createWavFromData:outputData];
     [self playWavAudioData:wavAudioData];
 }
