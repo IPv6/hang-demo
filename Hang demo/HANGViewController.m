@@ -85,7 +85,9 @@
 - (IBAction)autotunePressed:(id)sender
 {
     NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
-        [self.hangLib autotuneInAudiodata:input toOutAudiodata:output withLength:length];
+        [self.hangLib autotuneInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^float(float inFrequency) {
+            return frequencyNoteCorrection(inFrequency);
+        }];
     }];
     NSData *wavAudioData = [WavCreator createWavFromData:outputData];
     [self playWavAudioData:wavAudioData];
@@ -141,6 +143,56 @@
         _hangLib = [[HANGLib alloc] init];
     }
     return _hangLib;
+}
+
+#pragma mark Note corrections
+
+#define FREQ_A2 110
+#define FIRST_NOTE_FREQ FREQ_A2
+#define FIRST_NOTE_NAME 9 //A
+#define FIRST_NOTE_OCTAVE 2 //2
+#define NOTES_IN_OCTAVE 12
+
+float noteFromFrequency(float freq)
+{
+    const float noteDeltaLog = logf(2)/NOTES_IN_OCTAVE;
+    const float firstNoteLog = logf(FIRST_NOTE_FREQ);
+    float result = (logf(freq) - firstNoteLog) / noteDeltaLog;
+    return result;
+}
+
+float frequencyForNote(float note)
+{
+    const float noteDelta = expf(logf(2)/NOTES_IN_OCTAVE);
+    float result = FIRST_NOTE_FREQ * powf(noteDelta, note);
+    return result;
+}
+
+float frequencyNoteCorrection(float freq)
+{
+//    const int gamma[] = {0,2,4,5,7,9,11};
+//    const int gammaNotes = 7;
+    const int gamma[] = {0,4,7};
+    const int gammaNotes = 3;
+    
+    float note = noteFromFrequency(freq);
+    int octave = ((int)roundf(note))/12;
+    float noteInOctave = note - (octave*12);
+    
+    int minDeltaIndex = 0;
+    for (int i = 1; i < gammaNotes; i++) {
+        float a = ABS(gamma[minDeltaIndex] - noteInOctave);
+        float b = ABS(gamma[i] - noteInOctave);
+        if (a > b) {
+            minDeltaIndex = i;
+        }
+    }
+    
+    //    float corrNote = roundf(note);
+    float corrNote = octave*12 + gamma[minDeltaIndex];
+    float corrFreq = frequencyForNote(corrNote);
+    float result = corrFreq / freq;
+    return result;
 }
 
 @end
