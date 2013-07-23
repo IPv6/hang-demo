@@ -116,6 +116,26 @@
     [self playWavAudioData:wavAudioData];
 }
 
+- (IBAction)multivoicePressed:(id)sender
+{
+    NSDate *timeStart = [NSDate date];
+    NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
+        PitchShiftsStruct psStruct;
+        psStruct.voices = 3;
+        psStruct.pitchShifts = calloc(sizeof(float), psStruct.voices);
+        [self.hangLib generalTransformInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^PitchShiftsStruct(float inFrequency, float position) {
+            psStruct.pitchShifts[0] = 1;
+            psStruct.pitchShifts[1] = psStruct.pitchShifts[0] * 1.2;
+            psStruct.pitchShifts[2] = psStruct.pitchShifts[0] / 1.2;
+            return psStruct;
+        }];
+        free(psStruct.pitchShifts);
+    }];
+    DLog(@"t = %f", [[NSDate date] timeIntervalSinceDate:timeStart]);
+    NSData *wavAudioData = [WavCreator createWavFromData:outputData];
+    [self playWavAudioData:wavAudioData];
+}
+
 -(NSData *)morphAudioData:(NSData *)inputData withBlock:(void (^)(SInt16 *input, SInt16 *output, int length))morphBlock
 {
     int length = inputData.length/sizeof(SInt16);
