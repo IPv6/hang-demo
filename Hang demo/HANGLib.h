@@ -17,6 +17,10 @@
 #define DEFAULT_SAMPLE_RATE 44100
 #define DEFAULT_OSAMP 4
 
+typedef struct {
+	int voices;
+    float *pitchShifts;
+} PitchShiftsStruct;
 
 @interface HANGLib : NSObject {
     FFTSetup fftSetup;
@@ -47,5 +51,6 @@
 
 -(void) pitchShiftInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andPitch:(float)pitchShift;
 -(void) autotuneInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andFrequencyCorrection:(float (^)(float inFrequency))frequencyCorrection;
+-(void) generalTransformInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andFrequencyCorrection:(PitchShiftsStruct (^)(float inFrequency, float position))frequencyCorrection;
 
 @end

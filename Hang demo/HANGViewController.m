@@ -84,11 +84,18 @@
 
 - (IBAction)autotunePressed:(id)sender
 {
+    NSDate *timeStart = [NSDate date];
     NSData *outputData = [self morphAudioData:[self audioData] withBlock:^(SInt16 *input, SInt16 *output, int length) {
-        [self.hangLib autotuneInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^float(float inFrequency) {
-            return frequencyNoteCorrection(inFrequency);
+        PitchShiftsStruct psStruct;
+        psStruct.voices = 1;
+        psStruct.pitchShifts = calloc(sizeof(float), psStruct.voices);
+        [self.hangLib generalTransformInAudiodata:input toOutAudiodata:output withLength:length andFrequencyCorrection:^PitchShiftsStruct(float inFrequency, float position) {
+            psStruct.pitchShifts[0] = frequencyNoteCorrection(inFrequency);
+            return psStruct;
         }];
+        free(psStruct.pitchShifts);
     }];
+    DLog(@"t = %f", [[NSDate date] timeIntervalSinceDate:timeStart]);
     NSData *wavAudioData = [WavCreator createWavFromData:outputData];
     [self playWavAudioData:wavAudioData];
 }
@@ -172,8 +179,10 @@ float frequencyNoteCorrection(float freq)
 {
 //    const int gamma[] = {0,2,4,5,7,9,11};
 //    const int gammaNotes = 7;
-    const int gamma[] = {0,4,7};
-    const int gammaNotes = 3;
+//    const int gamma[] = {0,4,7};
+//    const int gammaNotes = 3;
+    const int gamma[] = {0};
+    const int gammaNotes = 1;
     
     float note = noteFromFrequency(freq);
     int octave = ((int)roundf(note))/12;
