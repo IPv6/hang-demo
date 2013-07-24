@@ -22,32 +22,7 @@ typedef struct {
     float *pitchShifts;
 } PitchShiftsStruct;
 
-@interface HANGLib : NSObject {
-    FFTSetup fftSetup;
-    DSPComplex *tempComplex;
-    DSPSplitComplex tempSplitComplex;
-    
-    float *gInFIFO;
-    float *gOutFIFO;
-    float *gFFTworksp;
-    float *gLastPhase;
-    float *gSumPhase;
-    float *gOutputAccum;
-    float *gAnaFreq;
-    float *gAnaMagn;
-    float *gSynFreq;
-    float *gSynMagn;
-    int fftFrameSize, fftFrameSize2, fftFrameSizeLog2;
-    int osamp, stepSize, inFifoLatency, gRover;
-    float freqPerBin, sampleRate, expct;
-    
-    float magn, phase, tmp, window, real, imag;
-    int i, k, qpd, index;
-    
-    float *windowArray;
-}
-
--(void) fftTest;
+@interface HANGLib : NSObject 
 
 -(void) generalTransformInAudiodata:(SInt16 *)inData toOutAudiodata:(SInt16 *)outData withLength:(int)length andFrequencyCorrection:(PitchShiftsStruct (^)(float inFrequency, float position))frequencyCorrection;
 

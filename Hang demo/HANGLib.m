@@ -8,7 +8,31 @@
 
 #import "HANGLib.h"
 
-@interface HANGLib()
+@interface HANGLib() {
+    FFTSetup fftSetup;
+    DSPComplex *tempComplex;
+    DSPSplitComplex tempSplitComplex;
+    
+    float *gInFIFO;
+    float *gOutFIFO;
+    float *gFFTworksp;
+    float *gLastPhase;
+    float *gSumPhase;
+    float *gOutputAccum;
+    float *gAnaFreq;
+    float *gAnaMagn;
+    float *gSynFreq;
+    float *gSynMagn;
+    int fftFrameSize, fftFrameSize2, fftFrameSizeLog2;
+    int osamp, stepSize, inFifoLatency, gRover;
+    float freqPerBin, sampleRate, expct;
+    float *tmpPolar, *tmpRect;
+    
+    float magn, phase, tmp, window, real, imag;
+    int i, k, qpd, index;
+    
+    float *windowArray;
+}
 
 @end
 
@@ -71,6 +95,8 @@
     gAnaMagn = calloc(sizeof(float), FFT_ARR_SIZE);
     gSynFreq = calloc(sizeof(float), FFT_ARR_SIZE);
     gSynMagn = calloc(sizeof(float), FFT_ARR_SIZE);
+    tmpPolar = calloc(sizeof(float), 4);
+    tmpRect = calloc(sizeof(float), 4);
     fftFrameSize = FFT_ARR_SIZE;
     fftFrameSize2 = fftFrameSize / 2;
     fftFrameSizeLog2 = FFT_ARR_BITS;
@@ -86,6 +112,8 @@
 
 -(void) destroyPitchShiftBuffers
 {
+    free(tmpRect);      tmpRect = nil;
+    free(tmpPolar);     tmpPolar = nil;
     free(gSynMagn);     gSynMagn = nil;
     free(gSynFreq);     gSynFreq = nil;
     free(gAnaMagn);     gAnaMagn = nil;
@@ -107,70 +135,38 @@
     
     if (gRover == 0) gRover = inFifoLatency;
     
-    // main processing loop
     for (i = 0; i < length; i++)
     {
-        // As long as we have not yet collected enough data just read in
         gInFIFO[gRover] = inDataFloat[i];
         outDataFloat[i] = gOutFIFO[gRover - inFifoLatency];
         gRover++;
         
-        // now we have enough data for processing
         if (gRover >= fftFrameSize)
         {
             gRover = inFifoLatency;
-            
-            // do windowing
             vDSP_vmul(gInFIFO, 1, windowArray, 1, gFFTworksp, 1, fftFrameSize);
-            
-            // ***************** ANALYSIS *******************
-            // do transform
-            
             vDSP_ctoz((DSPComplex*)gFFTworksp, 2, &tempSplitComplex, 1, fftFrameSize2);
             vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, fftFrameSizeLog2, kFFTDirection_Forward);
-            
-            // compute magnitude and phase
             vDSP_zvabs(&tempSplitComplex, 1, gAnaMagn, 1, fftFrameSize2);
             vDSP_zvphas(&tempSplitComplex, 1, gAnaFreq, 1, fftFrameSize2);
-            
-            // this is the analysis step
             int maxFreqIndex = 1;
             float maxFreqAmp = 0;
             float pitchShift = 1.0;
-            
             for (k = 0; k <= fftFrameSize2; k++)
             {
-                // get frequency with max amplitude
                 if (maxFreqAmp<gAnaMagn[k]) {
                     maxFreqIndex = k;
                     maxFreqAmp = gAnaMagn[k];
                 }
-                
                 phase = gAnaFreq[k];
-                
-                // compute phase difference
-                tmp = phase - gLastPhase[k];
+                tmp = phase - gLastPhase[k] - (float)k * expct;
                 gLastPhase[k] = (float)phase;
-                
-                // subtract expected phase difference
-                tmp -= (float)k * expct;
-                
-                // map delta phase into +/- Pi interval
                 qpd = (int)(tmp / M_PI);
                 if (qpd >= 0) qpd += qpd & 1;
                 else qpd -= qpd & 1;
-                tmp -= M_PI * (float)qpd;
-                
-                // get deviation from bin frequency from the +/- Pi interval
-                tmp = osamp * tmp / (2.0 * M_PI);
-                
-                // compute the k-th partials' true frequency
-                tmp = (float)k * freqPerBin + tmp * freqPerBin;
-                
-                // store magnitude and true frequency in analysis arrays
+                tmp = (float)k * freqPerBin + (osamp * (tmp - M_PI * (float)qpd) / (2.0 * M_PI)) * freqPerBin;
                 gAnaMagn[k] = gAnaMagn[k]*2;
                 gAnaFreq[k] = (float)tmp;
-                
             }
             
             PitchShiftsStruct pitchShifts;
@@ -189,15 +185,11 @@
             
             for (int voice = 0; voice < pitchShifts.voices; voice++) {
                 pitchShift = pitchShifts.pitchShifts[voice];
-                
-                // ***************** PROCESSING *******************
-                // this does the actual pitch shifting
                 for (int zero = 0; zero < fftFrameSize; zero++)
                 {
                     gSynMagn[zero] = 0;
                     gSynFreq[zero] = 0;
                 }
-                
                 for (k = 0; k <= fftFrameSize2; k++)
                 {
                     index = (int)(k * pitchShift);
@@ -207,71 +199,43 @@
                         gSynFreq[index] = gAnaFreq[k] * pitchShift;
                     }
                 }
-                
-                // ***************** SYNTHESIS *******************
-                // this is the synthesis step
                 for (k = 0; k <= fftFrameSize2; k++)
                 {
-                    // get magnitude and true frequency from synthesis arrays
                     magn = gSynMagn[k];
-                    tmp = gSynFreq[k];
-                    
-                    // subtract bin mid frequency
-                    tmp -= (float)k * freqPerBin;
-                    
-                    // get bin deviation from freq deviation
-                    tmp /= freqPerBin;
-                    
-                    // take osamp into account
-                    tmp = 2.0 * M_PI * tmp / osamp;
-                    
-                    // add the overlap phase advance back in
-                    tmp += (float)k * expct;
-                    
-                    // accumulate delta phase to get bin phase
+                    tmp = 2.0 * M_PI * ((gSynFreq[k] - (float)k * freqPerBin) / freqPerBin) / osamp + (float)k * expct;
                     gSumPhase[k] += (float)tmp;
                     phase = gSumPhase[k];
                     
                     if (voice>0) {
-                        float re0 = gFFTworksp[2 * k] * cosf(gFFTworksp[2 * k + 1]);
-                        float im0 = gFFTworksp[2 * k] * sinf(gFFTworksp[2 * k + 1]);
-                        float re1 = magn * cosf(phase);
-                        float im1 = magn * sinf(phase);
-                        float re = re0 + re1;
-                        float im = im0 + im1;
-                        gFFTworksp[2 * k] = sqrtf(re*re + im*im);
-                        gFFTworksp[2 * k + 1] = atan2f(re, im);
+                        tmpPolar[0] = gFFTworksp[2 * k];
+                        tmpPolar[1] = gFFTworksp[2 * k+1];
+                        tmpPolar[2] = magn;
+                        tmpPolar[3] = phase;
+                        vDSP_rect(tmpPolar, 2, tmpRect, 2, 2);
+                        tmpRect[0] += tmpRect[2];
+                        tmpRect[1] += tmpRect[3];
+                        vDSP_polar(tmpRect, 2, tmpPolar, 2, 1);
+                        gFFTworksp[2 * k] = tmpPolar[0];
+                        gFFTworksp[2 * k + 1] = tmpPolar[1];
                     } else {
                         gFFTworksp[2 * k] = magn;
                         gFFTworksp[2 * k + 1] = phase;
                     }
                 }
             }
-            
-            // get real and imag parts
             vDSP_rect(gFFTworksp, 2, gFFTworksp, 2, fftFrameSize/2);
-            
-            // do inverse transform
             vDSP_ctoz((DSPComplex*)gFFTworksp, 2, &tempSplitComplex, 1, fftFrameSize2);
             vDSP_fft_zrip(fftSetup, &tempSplitComplex, 1, fftFrameSizeLog2, kFFTDirection_Inverse);
             vDSP_ztoc(&tempSplitComplex, 1, (DSPComplex *)gFFTworksp, 2, fftFrameSize2);
-            
-            // do windowing and add to output accumulator
             for (k = 0; k < fftFrameSize; k++)
             {
                 gOutputAccum[k] += (float)(2.0 * windowArray[k] * gFFTworksp[k] / (fftFrameSize2 * osamp));
             }
             for (k = 0; k < stepSize; k++) gOutFIFO[k] = gOutputAccum[k];
-            
-            // shift accumulator
             memmove(gOutputAccum, gOutputAccum + stepSize, fftFrameSize * sizeof(float));
-            
-            // move input FIFO
             for (k = 0; k < inFifoLatency; k++) gInFIFO[k] = gInFIFO[k + stepSize];
         }
     }
-    
-    //---------------------------------------------------------------------------------------
     
     float maxV = 0;
     float minV = 0;
@@ -280,9 +244,7 @@
     float maxA = MAX(ABS(maxV), ABS(minV));
     float mulCoef = (1.0 / maxA) * 32767;
     vDSP_vsmul(outDataFloat, 1, &mulCoef, outDataFloat, 1, length);
-    
     vDSP_vfix16(outDataFloat, 1, outData, 1, length);
-    
     free(outDataFloat);
     free(inDataFloat);
 }
